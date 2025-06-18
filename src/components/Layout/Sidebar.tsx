@@ -14,9 +14,10 @@ import { useLanguage } from '../../hooks/useLanguage';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  language: 'ar' | 'fr';
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, language }) => {
   const location = useLocation();
   const { t } = useLanguage();
 
@@ -32,6 +33,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Determine positioning and text alignment based on language
+  const sidebarPosition = language === 'ar' ? 'right-0' : 'left-0';
+  const textAlignment = language === 'ar' ? 'text-right' : 'text-left';
+  const translateClass = language === 'ar' ? 
+    (isOpen ? 'translate-x-0' : 'translate-x-full') : 
+    (isOpen ? 'translate-x-0' : '-translate-x-full');
+
   return (
     <>
       {/* Mobile overlay */}
@@ -44,17 +52,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       {/* Sidebar */}
       <div className={`
-        fixed right-0 top-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-50
-        ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+        fixed ${sidebarPosition} top-0 h-full w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-50
+        ${translateClass}
         lg:translate-x-0 lg:static lg:shadow-none
       `}>
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-800 text-right">
+            <h2 className={`text-xl font-bold text-gray-800 ${textAlignment}`}>
               {t('nav.workshop_name')}
             </h2>
-            <p className="text-sm text-gray-600 text-right mt-1">
+            <p className={`text-sm text-gray-600 ${textAlignment} mt-1`}>
               {t('nav.comprehensive_system')}
             </p>
           </div>
@@ -69,8 +77,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     onClick={onClose}
                     className={`
                       flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200
+                      ${language === 'ar' ? 'flex-row-reverse' : 'flex-row'}
                       ${isActive(item.path)
-                        ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
+                        ? `bg-blue-50 text-blue-600 ${language === 'ar' ? 'border-r-4' : 'border-l-4'} border-blue-600`
                         : 'text-gray-700 hover:bg-gray-50'
                       }
                     `}
