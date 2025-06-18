@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Building, Phone, MapPin, MessageSquare } from 'lucide-react';
 import { useWorkshopSettings } from '../hooks/useSupabase';
+import { useLanguage } from '../hooks/useLanguage';
 
 const Settings: React.FC = () => {
+  const { t } = useLanguage();
   const { settings, loading, updateSettings } = useWorkshopSettings();
   const [formData, setFormData] = useState({
     name: '',
@@ -32,7 +34,7 @@ const Settings: React.FC = () => {
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
       console.error('Error updating settings:', error);
-      alert('حدث خطأ في حفظ الإعدادات');
+      alert(t('common.error_occurred'));
     } finally {
       setSaving(false);
     }
@@ -50,11 +52,11 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">إعدادات الورشة</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
         
         {saved && (
           <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm">
-            تم حفظ الإعدادات بنجاح
+            {t('settings.saved_successfully')}
           </div>
         )}
       </div>
@@ -63,26 +65,26 @@ const Settings: React.FC = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center gap-3 mb-6">
           <Building className="w-6 h-6 text-blue-600" />
-          <h2 className="text-xl font-semibold text-gray-900">معلومات الورشة</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{t('settings.workshop_info')}</h2>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              اسم الورشة
+              {t('settings.workshop_name')}
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="أدخل اسم الورشة"
+              placeholder={t('settings.workshop_name_placeholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              رقم الهاتف
+              {t('settings.phone_number')}
             </label>
             <div className="relative">
               <Phone className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -91,14 +93,14 @@ const Settings: React.FC = () => {
                 value={formData.phone}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="01234567890"
+                placeholder={t('settings.phone_placeholder')}
               />
             </div>
           </div>
 
           <div className="lg:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              العنوان
+              {t('settings.address')}
             </label>
             <div className="relative">
               <MapPin className="absolute right-3 top-3 text-gray-400 w-5 h-5" />
@@ -107,14 +109,14 @@ const Settings: React.FC = () => {
                 onChange={(e) => setFormData({...formData, address: e.target.value})}
                 rows={3}
                 className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="أدخل عنوان الورشة"
+                placeholder={t('settings.address_placeholder')}
               />
             </div>
           </div>
 
           <div className="lg:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              رسالة الشكر
+              {t('settings.thank_you_message')}
             </label>
             <div className="relative">
               <MessageSquare className="absolute right-3 top-3 text-gray-400 w-5 h-5" />
@@ -123,11 +125,11 @@ const Settings: React.FC = () => {
                 onChange={(e) => setFormData({...formData, thank_you_message: e.target.value})}
                 rows={3}
                 className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="رسالة تظهر في أسفل الوصلات"
+                placeholder={t('settings.thank_you_placeholder')}
               />
             </div>
             <p className="mt-2 text-sm text-gray-600">
-              هذه الرسالة ستظهر أسفل وصلات الاستلام
+              {t('settings.thank_you_description')}
             </p>
           </div>
         </div>
@@ -139,33 +141,33 @@ const Settings: React.FC = () => {
             className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
             <Save className="w-5 h-5" />
-            {saving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
+            {saving ? t('settings.saving') : t('settings.save_settings')}
           </button>
         </div>
       </div>
 
       {/* Account Settings */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">إعدادات الحساب</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">{t('settings.account_settings')}</h2>
         
         <div className="space-y-4">
           <div className="p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-medium text-gray-900 mb-2">إضافة مستخدم جديد</h3>
+            <h3 className="font-medium text-gray-900 mb-2">{t('settings.add_user')}</h3>
             <p className="text-sm text-gray-600 mb-4">
-              يمكن للمدير إضافة فنيين جدد للنظام
+              {t('settings.add_user_description')}
             </p>
             <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-              إضافة مستخدم
+              {t('settings.add_user_button')}
             </button>
           </div>
 
           <div className="p-4 bg-gray-50 rounded-lg">
-            <h3 className="font-medium text-gray-900 mb-2">تغيير كلمة المرور</h3>
+            <h3 className="font-medium text-gray-900 mb-2">{t('settings.change_password')}</h3>
             <p className="text-sm text-gray-600 mb-4">
-              قم بتحديث كلمة المرور الخاصة بك بانتظام
+              {t('settings.change_password_description')}
             </p>
             <button className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors">
-              تغيير كلمة المرور
+              {t('settings.change_password_button')}
             </button>
           </div>
         </div>

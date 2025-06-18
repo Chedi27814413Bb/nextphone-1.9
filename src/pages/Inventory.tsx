@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import { Plus, Search, Filter, Edit, Trash2, AlertTriangle, Package, TrendingDown, TrendingUp } from 'lucide-react';
 import AddSparePartModal from '../components/Modals/AddSparePartModal';
 import { useSpareParts } from '../hooks/useSupabase';
+import { useLanguage } from '../hooks/useLanguage';
+import { getPartTypes } from '../translations';
 
 const Inventory: React.FC = () => {
+  const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [showLowStock, setShowLowStock] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const { spareParts, loading, addSparePart, updateSparePart, deleteSparePart } = useSpareParts();
+
+  const partTypes = getPartTypes(language);
 
   const handleAddSparePart = async (newSparePart: any) => {
     try {
@@ -27,7 +32,7 @@ const Inventory: React.FC = () => {
       await addSparePart(sparePartData);
     } catch (error) {
       console.error('Error adding spare part:', error);
-      alert('حدث خطأ في إضافة قطعة الغيار');
+      alert(t('common.error_occurred'));
     }
   };
 
@@ -38,17 +43,17 @@ const Inventory: React.FC = () => {
       await updateSparePart(partId, { quantity: newQuantity });
     } catch (error) {
       console.error('Error updating quantity:', error);
-      alert('حدث خطأ في تحديث الكمية');
+      alert(t('common.error_occurred'));
     }
   };
 
   const handleDeletePart = async (partId: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذه القطعة؟')) {
+    if (window.confirm(t('common.confirm_delete'))) {
       try {
         await deleteSparePart(partId);
       } catch (error) {
         console.error('Error deleting spare part:', error);
-        alert('حدث خطأ في حذف القطعة');
+        alert(t('common.error_occurred'));
       }
     }
   };
@@ -84,14 +89,14 @@ const Inventory: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">إدارة المخزون</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('inventory.title')}</h1>
         
         <button 
           onClick={() => setShowAddModal(true)}
           className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
-          إضافة قطعة غيار
+          {t('inventory.add_spare_part')}
         </button>
       </div>
 
@@ -101,7 +106,7 @@ const Inventory: React.FC = () => {
           <div className="flex items-center gap-3">
             <Package className="w-8 h-8 text-blue-600" />
             <div>
-              <p className="text-sm text-blue-600 font-medium">إجمالي القطع</p>
+              <p className="text-sm text-blue-600 font-medium">{t('inventory.total_parts')}</p>
               <p className="text-2xl font-bold text-blue-800">{spareParts.length}</p>
             </div>
           </div>
@@ -111,7 +116,7 @@ const Inventory: React.FC = () => {
           <div className="flex items-center gap-3">
             <TrendingDown className="w-8 h-8 text-red-600" />
             <div>
-              <p className="text-sm text-red-600 font-medium">مخزون منخفض</p>
+              <p className="text-sm text-red-600 font-medium">{t('inventory.low_stock')}</p>
               <p className="text-2xl font-bold text-red-800">{lowStockCount}</p>
             </div>
           </div>
@@ -121,7 +126,7 @@ const Inventory: React.FC = () => {
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-8 h-8 text-gray-600" />
             <div>
-              <p className="text-sm text-gray-600 font-medium">نفد المخزون</p>
+              <p className="text-sm text-gray-600 font-medium">{t('inventory.out_of_stock')}</p>
               <p className="text-2xl font-bold text-gray-800">{outOfStockCount}</p>
             </div>
           </div>
@@ -131,8 +136,8 @@ const Inventory: React.FC = () => {
           <div className="flex items-center gap-3">
             <TrendingUp className="w-8 h-8 text-green-600" />
             <div>
-              <p className="text-sm text-green-600 font-medium">قيمة المخزون</p>
-              <p className="text-2xl font-bold text-green-800">{totalValue.toLocaleString()} د.ت</p>
+              <p className="text-sm text-green-600 font-medium">{t('inventory.stock_value')}</p>
+              <p className="text-2xl font-bold text-green-800">{totalValue.toLocaleString()} {t('common.currency')}</p>
             </div>
           </div>
         </div>
@@ -145,7 +150,7 @@ const Inventory: React.FC = () => {
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
-              placeholder="البحث عن القطع..."
+              placeholder={t('inventory.search_placeholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -160,14 +165,10 @@ const Inventory: React.FC = () => {
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">جميع الأنواع</option>
-                <option value="شاشة">شاشة</option>
-                <option value="بطارية">بطارية</option>
-                <option value="مايك">مايك</option>
-                <option value="سماعة">سماعة</option>
-                <option value="كاميرا">كاميرا</option>
-                <option value="شاحن">شاحن</option>
-                <option value="أخرى">أخرى</option>
+                <option value="all">{t('inventory.all_types')}</option>
+                {partTypes.map(type => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
               </select>
             </div>
             
@@ -178,7 +179,7 @@ const Inventory: React.FC = () => {
                 onChange={(e) => setShowLowStock(e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
-              <span className="text-sm text-gray-700">مخزون منخفض فقط</span>
+              <span className="text-sm text-gray-700">{t('inventory.low_stock_only')}</span>
             </label>
           </div>
         </div>
@@ -191,14 +192,14 @@ const Inventory: React.FC = () => {
             <div className="flex items-center gap-2 text-red-800">
               <AlertTriangle className="w-5 h-5" />
               <span className="font-medium">
-                تنبيه: {lowStockCount} قطعة تحتاج إلى إعادة تخزين
+                {t('inventory.low_stock_alert', { count: lowStockCount })}
               </span>
             </div>
             <button
               onClick={() => setShowLowStock(true)}
               className="text-red-600 hover:text-red-800 font-medium text-sm"
             >
-              عرض القطع
+              {t('inventory.show_parts')}
             </button>
           </div>
         </div>
@@ -211,15 +212,15 @@ const Inventory: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">القطعة</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">النوع</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">الجهاز المتوافق</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">الكمية</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">سعر الشراء</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">سعر البيع</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">الربح</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">القيمة الإجمالية</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">الإجراءات</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">{t('inventory.part_name')}</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">{t('inventory.type')}</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">{t('inventory.compatible_device')}</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">{t('inventory.quantity')}</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">{t('inventory.purchase_price')}</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">{t('inventory.selling_price')}</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">{t('inventory.profit')}</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">{t('inventory.total_value')}</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">{t('inventory.actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -229,13 +230,13 @@ const Inventory: React.FC = () => {
                       <div>
                         <p className="font-medium text-gray-900">{part.name}</p>
                         {part.screen_quality && (
-                          <p className="text-sm text-gray-600">جودة: {part.screen_quality}</p>
+                          <p className="text-sm text-gray-600">{t('inventory.quality')}: {part.screen_quality}</p>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {part.part_type}
+                        {partTypes.find(type => type.value === part.part_type)?.label || part.part_type}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -272,18 +273,18 @@ const Inventory: React.FC = () => {
                         )}
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
-                        تنبيه عند: {part.low_stock_alert}
+                        {t('inventory.alert_at')}: {part.low_stock_alert}
                       </p>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-gray-900">{part.purchase_price} د.ت</span>
+                      <span className="text-gray-900">{part.purchase_price} {t('common.currency')}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-medium text-gray-900">{part.selling_price} د.ت</span>
+                      <span className="font-medium text-gray-900">{part.selling_price} {t('common.currency')}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="font-medium text-green-600">
-                        {(part.selling_price - part.purchase_price).toFixed(2)} د.ت
+                        {(part.selling_price - part.purchase_price).toFixed(2)} {t('common.currency')}
                       </span>
                       <p className="text-xs text-gray-500">
                         ({(((part.selling_price - part.purchase_price) / part.purchase_price) * 100).toFixed(1)}%)
@@ -291,7 +292,7 @@ const Inventory: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <span className="font-medium text-gray-900">
-                        {(part.quantity * part.purchase_price).toFixed(2)} د.ت
+                        {(part.quantity * part.purchase_price).toFixed(2)} {t('common.currency')}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -315,14 +316,14 @@ const Inventory: React.FC = () => {
         ) : (
           <div className="text-center py-12">
             <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد قطع غيار</h3>
-            <p className="text-gray-600 mb-6">ابدأ بإضافة قطع الغيار إلى المخزون</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('inventory.no_spare_parts')}</h3>
+            <p className="text-gray-600 mb-6">{t('inventory.add_parts_message')}</p>
             <button
               onClick={() => setShowAddModal(true)}
               className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-5 h-5" />
-              إضافة قطعة غيار
+              {t('inventory.add_spare_part')}
             </button>
           </div>
         )}

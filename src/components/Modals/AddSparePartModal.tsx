@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Package } from 'lucide-react';
 import { useBrands, useModels } from '../../hooks/useSupabase';
+import { useLanguage } from '../../hooks/useLanguage';
+import { getPartTypes, getScreenQualities } from '../../translations';
 
 interface AddSparePartModalProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface AddSparePartModalProps {
 const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, onAdd }) => {
   const { brands } = useBrands();
   const { models } = useModels();
+  const { t, language } = useLanguage();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -27,8 +30,8 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [filteredModels, setFilteredModels] = useState(models);
 
-  const partTypes = ['شاشة', 'بطارية', 'مايك', 'سماعة', 'كاميرا', 'شاحن', 'أخرى'];
-  const screenQualities = ['OLED', 'AMOLED', 'LCD', 'TFT', 'IPS'];
+  const partTypes = getPartTypes(language);
+  const screenQualities = getScreenQualities(language);
 
   React.useEffect(() => {
     if (formData.brand_id) {
@@ -42,14 +45,14 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) newErrors.name = 'اسم القطعة مطلوب';
-    if (!formData.brand_id) newErrors.brand_id = 'الماركة مطلوبة';
-    if (!formData.model_id) newErrors.model_id = 'الموديل مطلوب';
-    if (formData.quantity < 0) newErrors.quantity = 'الكمية يجب أن تكون أكبر من أو تساوي صفر';
-    if (formData.purchase_price <= 0) newErrors.purchase_price = 'سعر الشراء يجب أن يكون أكبر من صفر';
-    if (formData.selling_price <= 0) newErrors.selling_price = 'سعر البيع يجب أن يكون أكبر من صفر';
+    if (!formData.name.trim()) newErrors.name = t('modal.part_name_required');
+    if (!formData.brand_id) newErrors.brand_id = t('modal.brand_required');
+    if (!formData.model_id) newErrors.model_id = t('modal.model_required');
+    if (formData.quantity < 0) newErrors.quantity = t('modal.quantity_required_error');
+    if (formData.purchase_price <= 0) newErrors.purchase_price = t('modal.purchase_price_required_error');
+    if (formData.selling_price <= 0) newErrors.selling_price = t('modal.selling_price_required_error');
     if (formData.selling_price <= formData.purchase_price) {
-      newErrors.selling_price = 'سعر البيع يجب أن يكون أكبر من سعر الشراء';
+      newErrors.selling_price = t('modal.selling_price_validation_error');
     }
 
     setErrors(newErrors);
@@ -96,7 +99,7 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Package className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-semibold text-gray-900">إضافة قطعة غيار جديدة</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('modal.add_spare_part')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -109,54 +112,54 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="form-group">
-              <label className="form-label">اسم القطعة *</label>
+              <label className="form-label">{t('modal.part_name')} *</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 className={`form-input ${errors.name ? 'border-red-500' : ''}`}
-                placeholder="مثال: شاشة iPhone 14"
+                placeholder={t('modal.part_name_placeholder')}
               />
               {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
             </div>
 
             <div className="form-group">
-              <label className="form-label">نوع القطعة *</label>
+              <label className="form-label">{t('modal.part_type')} *</label>
               <select
                 value={formData.part_type}
                 onChange={(e) => setFormData({...formData, part_type: e.target.value})}
                 className="form-select"
               >
                 {partTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                  <option key={type.value} value={type.value}>{type.label}</option>
                 ))}
               </select>
             </div>
 
             {formData.part_type === 'شاشة' && (
               <div className="form-group">
-                <label className="form-label">جودة الشاشة</label>
+                <label className="form-label">{t('modal.screen_quality')}</label>
                 <select
                   value={formData.screen_quality}
                   onChange={(e) => setFormData({...formData, screen_quality: e.target.value})}
                   className="form-select"
                 >
-                  <option value="">اختر جودة الشاشة</option>
+                  <option value="">{t('modal.select_screen_quality')}</option>
                   {screenQualities.map(quality => (
-                    <option key={quality} value={quality}>{quality}</option>
+                    <option key={quality.value} value={quality.value}>{quality.label}</option>
                   ))}
                 </select>
               </div>
             )}
 
             <div className="form-group">
-              <label className="form-label">الماركة *</label>
+              <label className="form-label">{t('modal.brand_name')} *</label>
               <select
                 value={formData.brand_id}
                 onChange={(e) => setFormData({...formData, brand_id: e.target.value})}
                 className={`form-select ${errors.brand_id ? 'border-red-500' : ''}`}
               >
-                <option value="">اختر الماركة</option>
+                <option value="">{t('modal.select_brand')}</option>
                 {brands.map(brand => (
                   <option key={brand.id} value={brand.id}>{brand.name}</option>
                 ))}
@@ -165,14 +168,14 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
             </div>
 
             <div className="form-group">
-              <label className="form-label">الموديل *</label>
+              <label className="form-label">{t('modal.model_name')} *</label>
               <select
                 value={formData.model_id}
                 onChange={(e) => setFormData({...formData, model_id: e.target.value})}
                 className={`form-select ${errors.model_id ? 'border-red-500' : ''}`}
                 disabled={!formData.brand_id}
               >
-                <option value="">اختر الموديل</option>
+                <option value="">{t('modal.select_model')}</option>
                 {filteredModels.map(model => (
                   <option key={model.id} value={model.id}>{model.name}</option>
                 ))}
@@ -181,7 +184,7 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
             </div>
 
             <div className="form-group">
-              <label className="form-label">الكمية *</label>
+              <label className="form-label">{t('modal.quantity')} *</label>
               <input
                 type="number"
                 min="0"
@@ -194,7 +197,7 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
             </div>
 
             <div className="form-group">
-              <label className="form-label">سعر الشراء (د.ت) *</label>
+              <label className="form-label">{t('modal.purchase_price')} *</label>
               <input
                 type="number"
                 min="0"
@@ -208,7 +211,7 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
             </div>
 
             <div className="form-group">
-              <label className="form-label">سعر البيع (د.ت) *</label>
+              <label className="form-label">{t('modal.selling_price')} *</label>
               <input
                 type="number"
                 min="0"
@@ -222,7 +225,7 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
             </div>
 
             <div className="form-group">
-              <label className="form-label">تنبيه المخزون المنخفض</label>
+              <label className="form-label">{t('modal.low_stock_alert')}</label>
               <input
                 type="number"
                 min="1"
@@ -231,15 +234,17 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
                 className="form-input"
                 placeholder="5"
               />
-              <p className="text-sm text-gray-600 mt-1">سيتم تنبيهك عندما تصل الكمية لهذا الرقم</p>
+              <p className="text-sm text-gray-600 mt-1">{t('modal.low_stock_description')}</p>
             </div>
           </div>
 
           {formData.purchase_price > 0 && formData.selling_price > 0 && (
             <div className="bg-green-50 p-4 rounded-lg">
               <p className="text-green-800 font-medium">
-                الربح المتوقع: {(formData.selling_price - formData.purchase_price).toFixed(2)} د.ت
-                ({(((formData.selling_price - formData.purchase_price) / formData.purchase_price) * 100).toFixed(1)}%)
+                {t('modal.expected_profit', {
+                  profit: (formData.selling_price - formData.purchase_price).toFixed(2),
+                  percentage: (((formData.selling_price - formData.purchase_price) / formData.purchase_price) * 100).toFixed(1)
+                })}
               </p>
             </div>
           )}
@@ -250,13 +255,13 @@ const AddSparePartModal: React.FC<AddSparePartModalProps> = ({ isOpen, onClose, 
               onClick={onClose}
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              إلغاء
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              إضافة القطعة
+              {t('modal.add_part_button')}
             </button>
           </div>
         </form>

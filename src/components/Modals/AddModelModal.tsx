@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Smartphone } from 'lucide-react';
+import { useLanguage } from '../../hooks/useLanguage';
 
 interface Brand {
   id: string;
@@ -22,6 +23,7 @@ const AddModelModal: React.FC<AddModelModalProps> = ({
   selectedBrandId, 
   brands 
 }) => {
+  const { t } = useLanguage();
   const [modelName, setModelName] = useState('');
   const [brandId, setBrandId] = useState(selectedBrandId || '');
   const [loading, setLoading] = useState(false);
@@ -36,8 +38,8 @@ const AddModelModal: React.FC<AddModelModalProps> = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!modelName.trim()) newErrors.modelName = 'اسم الموديل مطلوب';
-    if (!brandId) newErrors.brandId = 'الماركة مطلوبة';
+    if (!modelName.trim()) newErrors.modelName = t('modal.model_name_required');
+    if (!brandId) newErrors.brandId = t('modal.brand_required');
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -56,7 +58,7 @@ const AddModelModal: React.FC<AddModelModalProps> = ({
       setErrors({});
       onClose();
     } catch (err) {
-      setErrors({ submit: err instanceof Error ? err.message : 'حدث خطأ في إضافة الموديل' });
+      setErrors({ submit: err instanceof Error ? err.message : t('common.error_occurred') });
     } finally {
       setLoading(false);
     }
@@ -77,7 +79,7 @@ const AddModelModal: React.FC<AddModelModalProps> = ({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Smartphone className="w-6 h-6 text-green-600" />
-            <h2 className="text-xl font-semibold text-gray-900">إضافة موديل جديد</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('modal.add_model')}</h2>
           </div>
           <button
             onClick={handleClose}
@@ -89,14 +91,14 @@ const AddModelModal: React.FC<AddModelModalProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="form-group">
-            <label className="form-label">الماركة *</label>
+            <label className="form-label">{t('modal.brand_name')} *</label>
             <select
               value={brandId}
               onChange={(e) => setBrandId(e.target.value)}
               className={`form-select ${errors.brandId ? 'border-red-500' : ''}`}
               disabled={loading || !!selectedBrandId}
             >
-              <option value="">اختر الماركة</option>
+              <option value="">{t('modal.select_brand')}</option>
               {brands.map(brand => (
                 <option key={brand.id} value={brand.id}>{brand.name}</option>
               ))}
@@ -105,13 +107,13 @@ const AddModelModal: React.FC<AddModelModalProps> = ({
           </div>
 
           <div className="form-group">
-            <label className="form-label">اسم الموديل *</label>
+            <label className="form-label">{t('modal.model_name')} *</label>
             <input
               type="text"
               value={modelName}
               onChange={(e) => setModelName(e.target.value)}
               className={`form-input ${errors.modelName ? 'border-red-500' : ''}`}
-              placeholder="مثال: iPhone 15 Pro, Galaxy S24"
+              placeholder={t('modal.model_name_placeholder')}
               disabled={loading}
             />
             {errors.modelName && <p className="text-red-500 text-sm mt-1">{errors.modelName}</p>}
@@ -130,14 +132,14 @@ const AddModelModal: React.FC<AddModelModalProps> = ({
               disabled={loading}
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
-              إلغاء
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={loading || !modelName.trim() || !brandId}
               className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
             >
-              {loading ? 'جاري الإضافة...' : 'إضافة الموديل'}
+              {loading ? t('modal.adding') : t('modal.add_model_button')}
             </button>
           </div>
         </form>

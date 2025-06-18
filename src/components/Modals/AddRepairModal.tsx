@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Wrench, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { useBrands, useModels, useSpareParts } from '../../hooks/useSupabase';
+import { useLanguage } from '../../hooks/useLanguage';
+import { getIssueTypes } from '../../translations';
 
 interface AddRepairModalProps {
   isOpen: boolean;
@@ -12,6 +14,7 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
   const { brands } = useBrands();
   const { models } = useModels();
   const { spareParts } = useSpareParts();
+  const { t, language } = useLanguage();
   
   const [formData, setFormData] = useState({
     customer_name: '',
@@ -34,16 +37,7 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
   const [filteredModels, setFilteredModels] = useState(models);
   const [availableParts, setAvailableParts] = useState(spareParts);
 
-  const issueTypes = [
-    'كسر الشاشة',
-    'مشكلة البطارية',
-    'عطل المايك',
-    'مشكلة السماعة',
-    'عطل الكاميرا',
-    'مشكلة الشحن',
-    'عطل البرمجيات',
-    'مشكلة أخرى'
-  ];
+  const issueTypes = getIssueTypes(language);
 
   useEffect(() => {
     if (formData.device_brand_id) {
@@ -69,18 +63,21 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.customer_name.trim()) newErrors.customer_name = 'اسم العميل مطلوب';
-    if (!formData.customer_phone.trim()) newErrors.customer_phone = 'رقم الهاتف مطلوب';
-    if (!formData.device_brand_id) newErrors.device_brand_id = 'ماركة الجهاز مطلوبة';
-    if (!formData.device_model_id) newErrors.device_model_id = 'موديل الجهاز مطلوب';
-    if (!formData.issue_type) newErrors.issue_type = 'نوع العطل مطلوب';
-    if (formData.labor_cost < 0) newErrors.labor_cost = 'تكلفة العمالة يجب أن تكون أكبر من أو تساوي صفر';
+    if (!formData.customer_name.trim()) newErrors.customer_name = t('modal.customer_name_required');
+    if (!formData.customer_phone.trim()) newErrors.customer_phone = t('modal.customer_phone_required');
+    if (!formData.device_brand_id) newErrors.device_brand_id = t('modal.device_brand_required');
+    if (!formData.device_model_id) newErrors.device_model_id = t('modal.device_model_required');
+    if (!formData.issue_type) newErrors.issue_type = t('modal.issue_type_required');
+    if (formData.labor_cost < 0) newErrors.labor_cost = t('modal.labor_cost_validation_error');
 
     // التحقق من توفر القطع في المخزون
     usedParts.forEach((part, index) => {
       const sparePart = spareParts.find(sp => sp.id === part.spare_part_id);
       if (sparePart && part.quantity > sparePart.quantity) {
-        newErrors[`part_${index}`] = `الكمية المطلوبة (${part.quantity}) أكبر من المتوفر في المخزون (${sparePart.quantity})`;
+        newErrors[`part_${index}`] = t('modal.quantity_error', {
+          requested: part.quantity,
+          available: sparePart.quantity
+        });
       }
     });
 
@@ -185,7 +182,7 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Wrench className="w-6 h-6 text-blue-600" />
-            <h2 className="text-xl font-semibold text-gray-900">إضافة عملية إصلاح جديدة</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('modal.add_repair')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -198,28 +195,28 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
         <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
           {/* Customer Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">معلومات العميل</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('modal.customer_info')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-group">
-                <label className="form-label">اسم العميل *</label>
+                <label className="form-label">{t('modal.customer_name')} *</label>
                 <input
                   type="text"
                   value={formData.customer_name}
                   onChange={(e) => setFormData({...formData, customer_name: e.target.value})}
                   className={`form-input ${errors.customer_name ? 'border-red-500' : ''}`}
-                  placeholder="أدخل اسم العميل"
+                  placeholder={t('modal.customer_name_placeholder')}
                 />
                 {errors.customer_name && <p className="text-red-500 text-sm mt-1">{errors.customer_name}</p>}
               </div>
 
               <div className="form-group">
-                <label className="form-label">رقم الهاتف *</label>
+                <label className="form-label">{t('modal.customer_phone')} *</label>
                 <input
                   type="tel"
                   value={formData.customer_phone}
                   onChange={(e) => setFormData({...formData, customer_phone: e.target.value})}
                   className={`form-input ${errors.customer_phone ? 'border-red-500' : ''}`}
-                  placeholder="أدخل رقم الهاتف"
+                  placeholder={t('modal.customer_phone_placeholder')}
                 />
                 {errors.customer_phone && <p className="text-red-500 text-sm mt-1">{errors.customer_phone}</p>}
               </div>
@@ -228,16 +225,16 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
 
           {/* Device Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">معلومات الجهاز</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('modal.device_info')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-group">
-                <label className="form-label">ماركة الجهاز *</label>
+                <label className="form-label">{t('modal.device_brand')} *</label>
                 <select
                   value={formData.device_brand_id}
                   onChange={(e) => setFormData({...formData, device_brand_id: e.target.value})}
                   className={`form-select ${errors.device_brand_id ? 'border-red-500' : ''}`}
                 >
-                  <option value="">اختر الماركة</option>
+                  <option value="">{t('modal.select_brand')}</option>
                   {brands.map(brand => (
                     <option key={brand.id} value={brand.id}>{brand.name}</option>
                   ))}
@@ -246,14 +243,14 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
               </div>
 
               <div className="form-group">
-                <label className="form-label">موديل الجهاز *</label>
+                <label className="form-label">{t('modal.device_model')} *</label>
                 <select
                   value={formData.device_model_id}
                   onChange={(e) => setFormData({...formData, device_model_id: e.target.value})}
                   className={`form-select ${errors.device_model_id ? 'border-red-500' : ''}`}
                   disabled={!formData.device_brand_id}
                 >
-                  <option value="">اختر الموديل</option>
+                  <option value="">{t('modal.select_model')}</option>
                   {filteredModels.map(model => (
                     <option key={model.id} value={model.id}>{model.name}</option>
                   ))}
@@ -265,25 +262,25 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
 
           {/* Issue Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">معلومات العطل</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('modal.issue_info')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-group">
-                <label className="form-label">نوع العطل *</label>
+                <label className="form-label">{t('modal.issue_type')} *</label>
                 <select
                   value={formData.issue_type}
                   onChange={(e) => setFormData({...formData, issue_type: e.target.value})}
                   className={`form-select ${errors.issue_type ? 'border-red-500' : ''}`}
                 >
-                  <option value="">اختر نوع العطل</option>
+                  <option value="">{t('modal.select_issue_type')}</option>
                   {issueTypes.map(issue => (
-                    <option key={issue} value={issue}>{issue}</option>
+                    <option key={issue.value} value={issue.value}>{issue.label}</option>
                   ))}
                 </select>
                 {errors.issue_type && <p className="text-red-500 text-sm mt-1">{errors.issue_type}</p>}
               </div>
 
               <div className="form-group">
-                <label className="form-label">تكلفة العمالة (د.ت)</label>
+                <label className="form-label">{t('modal.labor_cost')}</label>
                 <input
                   type="number"
                   min="0"
@@ -298,13 +295,13 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
             </div>
 
             <div className="form-group">
-              <label className="form-label">وصف العطل</label>
+              <label className="form-label">{t('modal.issue_description')}</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 className="form-textarea"
                 rows={3}
-                placeholder="وصف تفصيلي للعطل..."
+                placeholder={t('modal.issue_description_placeholder')}
               />
             </div>
           </div>
@@ -312,14 +309,14 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
           {/* Used Parts */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">القطع المستخدمة</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('modal.used_parts')}</h3>
               <button
                 type="button"
                 onClick={addUsedPart}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                إضافة قطعة
+                {t('modal.add_part')}
               </button>
             </div>
 
@@ -330,13 +327,13 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
               return (
                 <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-lg">
                   <div className="form-group">
-                    <label className="form-label">قطعة الغيار</label>
+                    <label className="form-label">{t('modal.spare_part')}</label>
                     <select
                       value={part.spare_part_id}
                       onChange={(e) => updateUsedPart(index, 'spare_part_id', e.target.value)}
                       className="form-select"
                     >
-                      <option value="">اختر قطعة الغيار</option>
+                      <option value="">{t('modal.select_spare_part')}</option>
                       {availableParts.map(sparePart => (
                         <option key={sparePart.id} value={sparePart.id}>
                           {sparePart.name} - {sparePart.brand?.name} {sparePart.model?.name}
@@ -346,7 +343,7 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
                   </div>
                   
                   <div className="form-group">
-                    <label className="form-label">الكمية</label>
+                    <label className="form-label">{t('modal.quantity')}</label>
                     <input
                       type="number"
                       min="1"
@@ -357,13 +354,13 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
                     />
                     {selectedPart && (
                       <p className="text-xs text-gray-600 mt-1">
-                        متوفر: {availableQty}
+                        {t('modal.available', { quantity: availableQty })}
                       </p>
                     )}
                   </div>
                   
                   <div className="form-group">
-                    <label className="form-label">السعر (د.ت)</label>
+                    <label className="form-label">{t('modal.price')}</label>
                     <input
                       type="number"
                       min="0"
@@ -375,9 +372,9 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
                   </div>
                   
                   <div className="form-group">
-                    <label className="form-label">الإجمالي</label>
+                    <label className="form-label">{t('modal.total')}</label>
                     <div className="form-input bg-gray-100 text-gray-700">
-                      {(part.quantity * part.price).toFixed(2)} د.ت
+                      {(part.quantity * part.price).toFixed(2)} {t('common.currency')}
                     </div>
                   </div>
                   
@@ -407,23 +404,23 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
           {/* Cost Summary */}
           {(usedParts.length > 0 || formData.labor_cost > 0) && (
             <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-2">ملخص التكلفة</h4>
+              <h4 className="font-medium text-blue-900 mb-2">{t('modal.cost_summary')}</h4>
               <div className="space-y-1 text-sm text-blue-800">
                 <div className="flex justify-between">
-                  <span>تكلفة القطع:</span>
-                  <span>{usedParts.reduce((sum, part) => sum + (part.quantity * part.price), 0).toFixed(2)} د.ت</span>
+                  <span>{t('modal.parts_cost')}</span>
+                  <span>{usedParts.reduce((sum, part) => sum + (part.quantity * part.price), 0).toFixed(2)} {t('common.currency')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>تكلفة العمالة:</span>
-                  <span>{formData.labor_cost.toFixed(2)} د.ت</span>
+                  <span>{t('modal.labor_cost_summary')}</span>
+                  <span>{formData.labor_cost.toFixed(2)} {t('common.currency')}</span>
                 </div>
                 <div className="flex justify-between font-medium border-t border-blue-200 pt-1">
-                  <span>إجمالي التكلفة:</span>
-                  <span>{calculateTotalCost().toFixed(2)} د.ت</span>
+                  <span>{t('modal.total_cost')}</span>
+                  <span>{calculateTotalCost().toFixed(2)} {t('common.currency')}</span>
                 </div>
                 <div className="flex justify-between font-medium text-green-700">
-                  <span>الربح المتوقع:</span>
-                  <span>{calculateProfit().toFixed(2)} د.ت</span>
+                  <span>{t('modal.expected_profit_summary')}</span>
+                  <span>{calculateProfit().toFixed(2)} {t('common.currency')}</span>
                 </div>
               </div>
             </div>
@@ -435,13 +432,13 @@ const AddRepairModal: React.FC<AddRepairModalProps> = ({ isOpen, onClose, onAdd 
               onClick={onClose}
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              إلغاء
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              إضافة الإصلاح
+              {t('modal.add_repair_button')}
             </button>
           </div>
         </form>
